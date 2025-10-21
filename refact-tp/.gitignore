@@ -1,0 +1,13 @@
+/.gradle/
+/build/
+/__MACOSX/
+/.idea/
+/gradle/
+/out/
+.DS_Store
+*.iml
+build.gradle
+settings.gradle
+
+
+
