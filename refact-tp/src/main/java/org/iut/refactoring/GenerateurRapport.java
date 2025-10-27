@@ -22,7 +22,7 @@ public class GenerateurRapport {
                         e.getNom(),
                         e.calculerSalaire()));
 
-        logService.log("Rapport salaires généré");
+        logService.log("Rapport salaires genere");
     }
 
     public void genererRapportExperience(List<Employe> employes, String equipeFiltre) {
@@ -31,11 +31,11 @@ public class GenerateurRapport {
         employes.stream()
                 .filter(e -> equipeFiltre == null || equipeFiltre.isEmpty()
                         || e.getEquipe().equals(equipeFiltre))
-                .forEach(e -> System.out.printf("%s: %d années%n",
+                .forEach(e -> System.out.printf("%s: %d annees%n",
                         e.getNom(),
                         e.getExperience()));
 
-        logService.log("Rapport expérience généré");
+        logService.log("Rapport experience genere");
     }
 
     public void genererRapportEquipes(List<Employe> employes) {
@@ -48,9 +48,9 @@ public class GenerateurRapport {
         );
 
         compteur.forEach((equipe, count) ->
-                System.out.printf("%s: %d employés%n", equipe, count)
+                System.out.printf("%s: %d employes%n", equipe, count)
         );
 
-        logService.log("Rapport équipes généré");
+        logService.log("Rapport equipes genere");
     }
 }

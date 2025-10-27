@@ -3,22 +3,22 @@ package org.iut.refactoring;
 class GestionApp {
     public static void main(String[] args) {
         GestionPersonnel app = new GestionPersonnel();
+
+        Employe alice = app.ajouterDeveloppeur("Alice", 50000, 6, "IT");
+        app.ajouterChefProjet("Bob", 60000, 4, "RH");
+        app.ajouterStagiaire("Charlie", 20000, 0, "IT");
+        app.ajouterDeveloppeur("Dan", 55000, 12, "IT");
         
-        app.ajouteSalarie("DEVELOPPEUR", "Alice", 50000, 6, "IT");
-        app.ajouteSalarie("CHEF DE PROJET", "Bob", 60000, 4, "RH");
-        app.ajouteSalarie("STAGIAIRE", "Charlie", 20000, 0, "IT");
-        app.ajouteSalarie("DEVELOPPEUR", "Dan", 55000, 12, "IT");
+        String aliceId = alice.getId();
         
-        String aliceId = (String) app.employes.get(0)[0];
+        System.out.println("Salaire de Alice: " + app.calculerSalaire(aliceId) + " €");
+        System.out.println("Bonus de Alice: " + app.calculerBonusAnnuel(aliceId) + " €");
         
-        System.out.println("Salaire de Alice: " + app.calculSalaire(aliceId) + " €");
-        System.out.println("Bonus de Alice: " + app.calculBonusAnnuel(aliceId) + " €");
+        app.genererRapportSalaires("IT");
+        app.genererRapportEquipes();
         
-        app.generationRapport("SALAIRE", "IT");
-        app.generationRapport("EQUIPE", null);
+        app.promouvoirEnChefProjet(aliceId);
         
-        app.avancementEmploye(aliceId, "CHEF DE PROJET");
-        
-        app.printLogs();
+        app.afficherLogs();
     }
 }
