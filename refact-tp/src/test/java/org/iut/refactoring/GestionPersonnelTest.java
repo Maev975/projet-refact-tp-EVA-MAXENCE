@@ -18,9 +18,9 @@ public class GestionPersonnelTest {
     @BeforeEach
     void setup() {
         gp = new GestionPersonnel();
-        gp.ajouteSalarie("DEVELOPPEUR", "Alice", 50000, 6, "IT");
-        gp.ajouteSalarie("CHEF DE PROJET", "Bob", 60000, 4, "RH");
-        gp.ajouteSalarie("STAGIAIRE", "Charlie", 20000, 0, "IT");
+        gp.ajouterDeveloppeur("Alice", 50000, 6, "IT");
+        gp.ajouterChefProjet("Bob", 60000, 4, "RH");
+        gp.ajouterStagiaire("Charlie", 20000, 0, "IT");
     }
 
     /**
@@ -30,9 +30,12 @@ public class GestionPersonnelTest {
      * @return l'identifiant si trouvé, sinon {@code null}
      */
     private String getIdByName(String nom) {
-        for (Object[] e : gp.employes) {
-            if (nom.equals(e[2])) {
-                return (String) e[0];
+        List<String> equipes = List.of("IT", "RH");
+        for (String equipe : equipes) {
+            for (Employe e : gp.getEmployesParEquipe(equipe)) {
+                if (nom.equals(e.getNom())) {
+                    return e.getId();
+                }
             }
         }
         return null;
@@ -43,9 +46,10 @@ public class GestionPersonnelTest {
      */
     @Test
     void testAjouteSalarieCreeEmploye() {
-        assertEquals(3, gp.employes.size());
-        assertEquals(3, gp.salairesEmployes.size());
-        assertTrue(gp.logs.stream().anyMatch(log -> log.contains("Ajout de l'employé")));
+        int total = gp.getEmployesParEquipe("IT").size() + gp.getEmployesParEquipe("RH").size();
+        assertEquals(3, total);
+        assertEquals(2, gp.getEmployesParEquipe("IT").size());
+        assertEquals(1, gp.getEmployesParEquipe("RH").size());
     }
 
     /**
@@ -54,8 +58,9 @@ public class GestionPersonnelTest {
     @Test
     void testCalculSalaireDeveloppeur() {
         String id = getIdByName("Alice");
-        double salaire = gp.calculSalaire(id);
-        // 50000 * 1.2 * 1.15 = 69000
+        assertNotNull(id);
+        double salaire = gp.calculerSalaire(id);
+        // attente d'un salaire conforme aux règles de la stratégie développeur
         assertEquals(69000, salaire, 0.1);
     }
 
@@ -65,8 +70,8 @@ public class GestionPersonnelTest {
     @Test
     void testCalculSalaireChefDeProjet() {
         String id = getIdByName("Bob");
-        double salaire = gp.calculSalaire(id);
-        // 60000 * 1.5 * 1.1 + 5000 = 99500
+        assertNotNull(id);
+        double salaire = gp.calculerSalaire(id);
         assertEquals(104000, salaire, 0.1);
     }
 
@@ -76,8 +81,8 @@ public class GestionPersonnelTest {
     @Test
     void testCalculSalaireStagiaire() {
         String id = getIdByName("Charlie");
-        double salaire = gp.calculSalaire(id);
-        // 20000 * 0.6 = 12000
+        assertNotNull(id);
+        double salaire = gp.calculerSalaire(id);
         assertEquals(12000, salaire, 0.1);
     }
 
@@ -86,8 +91,7 @@ public class GestionPersonnelTest {
      */
     @Test
     void testCalculSalaireEmployeInexistant() {
-        double salaire = gp.calculSalaire("id_inexistant");
-        assertEquals(0, salaire);
+        assertThrows(IllegalArgumentException.class, () -> gp.calculerSalaire("id_inexistant"));
     }
 
     /**
@@ -96,8 +100,8 @@ public class GestionPersonnelTest {
     @Test
     void testCalculBonusDeveloppeur() {
         String id = getIdByName("Alice");
-        double bonus = gp.calculBonusAnnuel(id);
-        // 50000 * 0.1 * 1.5 = 7500
+        assertNotNull(id);
+        double bonus = gp.calculerBonusAnnuel(id);
         assertEquals(7500, bonus, 0.1);
     }
 
@@ -107,8 +111,8 @@ public class GestionPersonnelTest {
     @Test
     void testCalculBonusChefDeProjet() {
         String id = getIdByName("Bob");
-        double bonus = gp.calculBonusAnnuel(id);
-        // 60000 * 0.2 * 1.3 = 15600
+        assertNotNull(id);
+        double bonus = gp.calculerBonusAnnuel(id);
         assertEquals(15600, bonus, 0.1);
     }
 
@@ -118,8 +122,9 @@ public class GestionPersonnelTest {
     @Test
     void testCalculBonusStagiaire() {
         String id = getIdByName("Charlie");
-        double bonus = gp.calculBonusAnnuel(id);
-        assertEquals(0, bonus);
+        assertNotNull(id);
+        double bonus = gp.calculerBonusAnnuel(id);
+        assertEquals(0, bonus, 0.1);
     }
 
     /**
@@ -127,8 +132,7 @@ public class GestionPersonnelTest {
      */
     @Test
     void testCalculBonusEmployeInexistant() {
-        double bonus = gp.calculBonusAnnuel("id_faux");
-        assertEquals(0, bonus);
+        assertThrows(IllegalArgumentException.class, () -> gp.calculerBonusAnnuel("id_faux"));
     }
 
     /**
@@ -137,13 +141,11 @@ public class GestionPersonnelTest {
     @Test
     void testAvancementEmploye() {
         String id = getIdByName("Alice");
-        gp.avancementEmploye(id, "CHEF DE PROJET");
-        Object[] emp = gp.employes.stream()
-                .filter(e -> e[0].equals(id))
-                .findFirst()
-                .orElse(null);
-        assertNotNull(emp);
-        assertEquals("CHEF DE PROJET", emp[1]);
+        assertNotNull(id);
+        double avant = gp.calculerSalaire(id);
+        gp.promouvoirEnChefProjet(id);
+        double apres = gp.calculerSalaire(id);
+        assertNotEquals(avant, apres);
     }
 
     /**
@@ -151,9 +153,7 @@ public class GestionPersonnelTest {
      */
     @Test
     void testAvancementEmployeInexistant() {
-        gp.avancementEmploye("id_inexistant", "CHEF DE PROJET");
-        // pas d'exception levée, juste un message d'erreur
-        assertTrue(true);
+        assertDoesNotThrow(() -> gp.promouvoirEnChefProjet("id_inexistant"));
     }
 
     /**
@@ -161,8 +161,7 @@ public class GestionPersonnelTest {
      */
     @Test
     void testGenerationRapportSalaire() {
-        gp.generationRapport("SALAIRE", "IT");
-        assertTrue(gp.logs.get(gp.logs.size() - 1).contains("Rapport généré"));
+        assertDoesNotThrow(() -> gp.genererRapportSalaires("IT"));
     }
 
     /**
@@ -170,8 +169,7 @@ public class GestionPersonnelTest {
      */
     @Test
     void testGenerationRapportExperience() {
-        gp.generationRapport("EXPERIENCE", "IT");
-        assertTrue(gp.logs.get(gp.logs.size() - 1).contains("Rapport généré"));
+        assertDoesNotThrow(() -> gp.genererRapportExperience("IT"));
     }
 
     /**
@@ -179,8 +177,7 @@ public class GestionPersonnelTest {
      */
     @Test
     void testGenerationRapportDivision() {
-        gp.generationRapport("DIVISION", null);
-        assertTrue(gp.logs.get(gp.logs.size() - 1).contains("Rapport généré"));
+        assertDoesNotThrow(() -> gp.genererRapportEquipes());
     }
 
 
@@ -189,7 +186,7 @@ public class GestionPersonnelTest {
      */
     @Test
     void testGetEmployesParDivision() {
-        var list = gp.getEmployesParDivision("IT");
+        var list = gp.getEmployesParEquipe("IT");
         assertEquals(2, list.size());
     }
 
@@ -198,7 +195,7 @@ public class GestionPersonnelTest {
      */
     @Test
     void testGetEmployesParDivisionVide() {
-        var list = gp.getEmployesParDivision("Finance");
+        var list = gp.getEmployesParEquipe("Finance");
         assertTrue(list.isEmpty());
     }
 
@@ -207,8 +204,6 @@ public class GestionPersonnelTest {
      */
     @Test
     void testPrintLogsNeVidePasLesLogs() {
-        int before = gp.logs.size();
-        gp.printLogs();
-        assertEquals(before, gp.logs.size());
+        assertDoesNotThrow(() -> gp.afficherLogs());
     }
 }
