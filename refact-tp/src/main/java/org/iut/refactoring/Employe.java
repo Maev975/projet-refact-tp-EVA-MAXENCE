@@ -7,14 +7,16 @@ public class Employe {
     private double salaireDeBase;
     private int experience;
     private String equipe;
+    private StrategieSalaire strategieSalaire;
 
-    public Employe(String type, String nom, double salaireDeBase, int experience, String equipe) {
+    public Employe(String type, String nom, double salaireDeBase, int experience, String equipe, StrategieSalaire strategieSalaire) {
         this.id = java.util.UUID.randomUUID().toString();
         this.type = type;
         this.nom = nom;
         this.salaireDeBase = salaireDeBase;
         this.experience = experience;
         this.equipe = equipe;
+        this.strategieSalaire = strategieSalaire;
     }
 
     public String getId() { return id; }
@@ -24,6 +26,14 @@ public class Employe {
     public double getSalaireDeBase() { return salaireDeBase; }
     public int getExperience() { return experience; }
     public String getEquipe() { return equipe; }
+
+    public double calculerSalaire() {
+        return strategieSalaire.calculerSalaire(this);
+    }
+
+    public double calculerBonusAnnuel() {
+        return strategieSalaire.calculerBonusAnnuel(this);
+    }
 
 
 }
